@@ -8,7 +8,7 @@ A utility that automatically clicks the "resume the conversation" text in Cursor
 5. Stop clicking once the text disappears
 6. Resume clicking when the text reappears
 7. Automatically stop after 30 minutes of inactivity
-8. Track and display total runtime from first click
+8. Track and display total runtime and click count
 
 ## Setup Instructions
 
@@ -80,6 +80,7 @@ The app will stop in three ways:
 When the app stops (by any method), it will display:
 - The reason for stopping
 - Total runtime since the first click
+- Total number of clicks performed
 
 ## How It Works
 
@@ -90,6 +91,7 @@ When the app stops (by any method), it will display:
 - The script includes a failsafe: moving your mouse to any corner of the screen will stop it immediately
 - An inactivity timer tracks the time since the last click, stopping after 30 minutes without clicks
 - Runtime tracking measures the duration from the first click until the script stops
+- Click counting tracks the total number of clicks performed
 
 ## Troubleshooting
 

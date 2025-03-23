@@ -44,6 +44,11 @@ def check_for_resume_text():
         print(f"[{get_timestamp()}] Error checking screen: {e}")
         return False
 
+def print_summary(runtime, click_count):
+    """Print a summary of the script's activity."""
+    print(f"[{get_timestamp()}] Total runtime: {runtime}")
+    print(f"[{get_timestamp()}] Total clicks: {click_count}")
+
 def main():
     print("\n=== Cursor Continue Clicker ===")
     print("This script will:")
@@ -69,6 +74,7 @@ def main():
             dots_count = 0  # Track number of dots printed
             last_activity = datetime.now()  # Track time of last click
             start_time = None  # Track when first click occurs
+            click_count = 0  # Track number of clicks
             
             while True:
                 current_time = datetime.now()
@@ -77,7 +83,7 @@ def main():
                 if (current_time - last_activity).total_seconds() > TIMEOUT_SECONDS:
                     runtime = format_duration((current_time - start_time).total_seconds()) if start_time else "0s"
                     print(f"\n[{get_timestamp()}] No activity for {TIMEOUT_MINUTES} minutes. Stopping...")
-                    print(f"[{get_timestamp()}] Total runtime: {runtime}")
+                    print_summary(runtime, click_count)
                     return
                 
                 # Check if the text is visible right now
@@ -96,6 +102,7 @@ def main():
                     pyautogui.moveTo(click_x, click_y)
                     time.sleep(0.5)  # Give a moment to see where it's going to click
                     pyautogui.click()
+                    click_count += 1
                     
                     # Return to original position
                     pyautogui.moveTo(original_x, original_y)
@@ -124,7 +131,7 @@ def main():
         except KeyboardInterrupt:
             runtime = format_duration((datetime.now() - start_time).total_seconds()) if start_time else "0s"
             print(f"\n[{get_timestamp()}] Stopping...")
-            print(f"[{get_timestamp()}] Total runtime: {runtime}")
+            print_summary(runtime, click_count)
         
 if __name__ == "__main__":
     main() 
