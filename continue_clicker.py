@@ -88,9 +88,18 @@ def main():
                         print()
                         dots_count = 0
                     print(f"[{get_timestamp()}] Prompt detected - clicking...")
+                    
+                    # Save current mouse position
+                    original_x, original_y = pyautogui.position()
+                    
+                    # Move to target and click
                     pyautogui.moveTo(click_x, click_y)
                     time.sleep(0.5)  # Give a moment to see where it's going to click
                     pyautogui.click()
+                    
+                    # Return to original position
+                    pyautogui.moveTo(original_x, original_y)
+                    
                     last_clicked = True
                     last_activity = datetime.now()  # Update last activity time
                     if start_time is None:  # Record first click time
