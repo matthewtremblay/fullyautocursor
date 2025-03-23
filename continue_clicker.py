@@ -8,9 +8,10 @@ from datetime import datetime, timedelta
 # Fail-safe: Moving mouse to corner will stop the program
 pyautogui.FAILSAFE = True
 
-# Timeout settings
+# Settings
 TIMEOUT_MINUTES = 30
 TIMEOUT_SECONDS = TIMEOUT_MINUTES * 60
+POST_CLICK_WAIT_SECONDS = 60  # Wait 1 minute after clicking before resuming checks
 
 def get_timestamp():
     """Return current timestamp in a readable format."""
@@ -56,6 +57,7 @@ def main():
     print("2. Watch for the continue prompt")
     print("3. Click when needed")
     print(f"4. Stop after {TIMEOUT_MINUTES} minutes of inactivity")
+    print(f"5. Wait {POST_CLICK_WAIT_SECONDS} seconds after each click")
     print("\nTo stop: Press Ctrl+C or move mouse to any corner")
     
     print("\nStep 1: Move your mouse over the 'resume the conversation' text")
@@ -75,6 +77,7 @@ def main():
             last_activity = datetime.now()  # Track time of last click
             start_time = None  # Track when first click occurs
             click_count = 0  # Track number of clicks
+            next_check_time = None  # Track when to resume checking after a click
             
             while True:
                 current_time = datetime.now()
@@ -85,6 +88,11 @@ def main():
                     print(f"\n[{get_timestamp()}] No activity for {TIMEOUT_MINUTES} minutes. Stopping...")
                     print_summary(runtime, click_count)
                     return
+                
+                # If we're waiting after a click, check if it's time to resume
+                if next_check_time and current_time < next_check_time:
+                    time.sleep(0.5)
+                    continue
                 
                 # Check if the text is visible right now
                 text_visible = check_for_resume_text()
@@ -107,19 +115,24 @@ def main():
                     # Return to original position
                     pyautogui.moveTo(original_x, original_y)
                     
+                    # Set up post-click wait period
+                    next_check_time = current_time + timedelta(seconds=POST_CLICK_WAIT_SECONDS)
+                    print(f"[{get_timestamp()}] Waiting {POST_CLICK_WAIT_SECONDS} seconds before resuming checks...")
+                    
                     last_clicked = True
                     last_activity = datetime.now()  # Update last activity time
                     if start_time is None:  # Record first click time
                         start_time = datetime.now()
-                    time.sleep(2)  # Wait a bit before checking again
-                elif not text_visible:
-                    if last_clicked:
+                    
+                elif not text_visible or (text_visible and current_time >= next_check_time):
+                    if last_clicked and current_time >= next_check_time:
                         if dots_count > 0:  # If we printed dots, add a newline
                             print()
                             dots_count = 0
-                        print(f"[{get_timestamp()}] Prompt handled - waiting for next one...")
+                        print(f"[{get_timestamp()}] Resuming prompt detection...")
                         last_clicked = False
-                    else:
+                        next_check_time = None
+                    elif not last_clicked:
                         print(".", end="", flush=True)  # Show it's still running
                         dots_count += 1
                         if dots_count >= 50:  # Start a new line after 50 dots
