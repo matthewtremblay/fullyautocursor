@@ -12,6 +12,7 @@ pyautogui.FAILSAFE = True
 TIMEOUT_MINUTES = 30
 TIMEOUT_SECONDS = TIMEOUT_MINUTES * 60
 POST_CLICK_WAIT_SECONDS = 60  # Wait 1 minute after clicking before resuming checks
+CHECK_INTERVAL = 0.5  # How often to check for the text (in seconds)
 
 def get_timestamp():
     """Return current timestamp in a readable format."""
@@ -77,6 +78,7 @@ def main():
             start_time = None  # Track when first click occurs
             click_count = 0  # Track number of clicks
             next_check_time = None  # Track when to resume checking after a click
+            last_check_time = datetime.now()  # Track when we last checked for text
             
             while True:
                 current_time = datetime.now()
@@ -90,7 +92,7 @@ def main():
                 
                 # If we're waiting after a click attempt, check if it's time to resume
                 if next_check_time and current_time < next_check_time:
-                    time.sleep(0.5)
+                    time.sleep(CHECK_INTERVAL)
                     continue
                 
                 # Reset next_check_time if we've passed it
@@ -100,44 +102,48 @@ def main():
                         dots_count = 0
                     print(f"[{get_timestamp()}] Resuming prompt detection...")
                     next_check_time = None
-                    
-                # Check if the text is visible right now
-                text_visible = check_for_resume_text()
                 
-                if text_visible:
-                    if dots_count > 0:  # If we printed dots, add a newline
-                        print()
-                        dots_count = 0
-                    print(f"[{get_timestamp()}] Prompt detected - clicking...")
+                # Only check for text at our specified interval
+                if (current_time - last_check_time).total_seconds() >= CHECK_INTERVAL:
+                    # Check if the text is visible right now
+                    text_visible = check_for_resume_text()
+                    last_check_time = current_time
                     
-                    # Save current mouse position
-                    original_x, original_y = pyautogui.position()
-                    
-                    # Move to target and click
-                    pyautogui.moveTo(click_x, click_y)
-                    time.sleep(0.5)  # Give a moment to see where it's going to click
-                    pyautogui.click()
-                    click_count += 1
-                    
-                    # Return to original position
-                    pyautogui.moveTo(original_x, original_y)
-                    
-                    # Set up post-click wait period
-                    next_check_time = current_time + timedelta(seconds=POST_CLICK_WAIT_SECONDS)
-                    print(f"[{get_timestamp()}] Waiting {POST_CLICK_WAIT_SECONDS} seconds before resuming checks...")
-                    
-                    last_activity = datetime.now()  # Update last activity time
-                    if start_time is None:  # Record first click time
-                        start_time = datetime.now()
-                    
-                else:
-                    print(".", end="", flush=True)  # Show it's still running
-                    dots_count += 1
-                    if dots_count >= 50:  # Start a new line after 50 dots
-                        remaining_minutes = int((TIMEOUT_SECONDS - (current_time - last_activity).total_seconds()) / 60)
-                        print(f" [{get_timestamp()}] ({remaining_minutes}m until timeout)")
-                        dots_count = 0
-                    time.sleep(0.5)
+                    if text_visible:
+                        if dots_count > 0:  # If we printed dots, add a newline
+                            print()
+                            dots_count = 0
+                        print(f"[{get_timestamp()}] Prompt detected - clicking...")
+                        
+                        # Save current mouse position
+                        original_x, original_y = pyautogui.position()
+                        
+                        # Move to target and click
+                        pyautogui.moveTo(click_x, click_y)
+                        time.sleep(0.5)  # Give a moment to see where it's going to click
+                        pyautogui.click()
+                        click_count += 1
+                        
+                        # Return to original position
+                        pyautogui.moveTo(original_x, original_y)
+                        
+                        # Set up post-click wait period
+                        next_check_time = current_time + timedelta(seconds=POST_CLICK_WAIT_SECONDS)
+                        print(f"[{get_timestamp()}] Waiting {POST_CLICK_WAIT_SECONDS} seconds before resuming checks...")
+                        
+                        last_activity = datetime.now()  # Update last activity time
+                        if start_time is None:  # Record first click time
+                            start_time = datetime.now()
+                        
+                    else:
+                        print(".", end="", flush=True)  # Show it's still running
+                        dots_count += 1
+                        if dots_count >= 50:  # Start a new line after 50 dots
+                            remaining_minutes = int((TIMEOUT_SECONDS - (current_time - last_activity).total_seconds()) / 60)
+                            print(f" [{get_timestamp()}] ({remaining_minutes}m until timeout)")
+                            dots_count = 0
+                
+                time.sleep(CHECK_INTERVAL)
                 
         except KeyboardInterrupt:
             runtime = format_duration((datetime.now() - start_time).total_seconds()) if start_time else "0s"
