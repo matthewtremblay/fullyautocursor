@@ -6,6 +6,8 @@ A utility that automatically clicks the "resume the conversation" text in Cursor
 3. Click the saved position when the text appears
 4. Stop clicking once the text disappears
 5. Resume clicking when the text reappears
+6. Automatically stop after 30 minutes of inactivity
+7. Track and display total runtime from first click
 
 ## Setup Instructions
 
@@ -64,12 +66,19 @@ python continue_clicker.py
    - Click automatically when the text appears
    - Stop clicking once the text disappears
    - Resume clicking if the text reappears
+   - Display remaining time until timeout while running
+   - Show total runtime when stopping
 
 ## Stopping the App
 
-You can stop the app in two ways:
+The app will stop in three ways:
 1. Press Ctrl+C in the terminal
 2. Move your mouse cursor to any corner of the screen (failsafe)
+3. Automatically after 30 minutes of inactivity
+
+When the app stops (by any method), it will display:
+- The reason for stopping
+- Total runtime since the first click
 
 ## How It Works
 
@@ -77,6 +86,8 @@ You can stop the app in two ways:
 - When detected, it clicks at the previously saved coordinates
 - It takes a fresh screenshot before each click attempt to ensure the text is still there
 - The script includes a failsafe: moving your mouse to any corner of the screen will stop it immediately
+- An inactivity timer tracks the time since the last click, stopping after 30 minutes without clicks
+- Runtime tracking measures the duration from the first click until the script stops
 
 ## Troubleshooting
 
