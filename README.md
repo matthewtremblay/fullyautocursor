@@ -5,11 +5,10 @@ A utility that automatically clicks the "resume the conversation" text in Cursor
 2. Watch for the "resume the conversation" text
 3. Click the saved position when the text appears
 4. Return cursor to its original position after clicking
-5. Wait 1 minute after each click before resuming checks
-6. Stop clicking once the text disappears
-7. Resume clicking when the text reappears
-8. Automatically stop after 30 minutes of inactivity
-9. Track and display total runtime and click count
+5. Wait 1 minute after each click attempt before resuming checks
+6. Resume monitoring regardless of click success
+7. Automatically stop after 30 minutes of inactivity
+8. Track and display total runtime and click count
 
 ## Setup Instructions
 
@@ -88,7 +87,8 @@ When the app stops (by any method), it will display:
 - The script uses OCR (Optical Character Recognition) to detect when the "resume the conversation" text appears
 - When detected, it clicks at the previously saved coordinates
 - After clicking, it returns your cursor to its original position
-- The script waits 1 minute after each click before resuming text detection
+- The script waits 1 minute after each click attempt before resuming text detection
+- After the wait period, it resumes monitoring regardless of whether the previous click was successful
 - It takes a fresh screenshot before each click attempt to ensure the text is still there
 - The script includes a failsafe: moving your mouse to any corner of the screen will stop it immediately
 - An inactivity timer tracks the time since the last click, stopping after 30 minutes without clicks

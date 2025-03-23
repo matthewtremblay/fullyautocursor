@@ -57,7 +57,7 @@ def main():
     print("2. Watch for the continue prompt")
     print("3. Click when needed")
     print(f"4. Stop after {TIMEOUT_MINUTES} minutes of inactivity")
-    print(f"5. Wait {POST_CLICK_WAIT_SECONDS} seconds after each click")
+    print(f"5. Wait {POST_CLICK_WAIT_SECONDS} seconds after each click attempt")
     print("\nTo stop: Press Ctrl+C or move mouse to any corner")
     
     print("\nStep 1: Move your mouse over the 'resume the conversation' text")
@@ -72,7 +72,6 @@ def main():
         print(f"\n[{get_timestamp()}] Position captured. Starting auto-clicker...")
         
         try:
-            last_clicked = False  # Track if we clicked last time
             dots_count = 0  # Track number of dots printed
             last_activity = datetime.now()  # Track time of last click
             start_time = None  # Track when first click occurs
@@ -89,15 +88,23 @@ def main():
                     print_summary(runtime, click_count)
                     return
                 
-                # If we're waiting after a click, check if it's time to resume
+                # If we're waiting after a click attempt, check if it's time to resume
                 if next_check_time and current_time < next_check_time:
                     time.sleep(0.5)
                     continue
                 
+                # Reset next_check_time if we've passed it
+                if next_check_time and current_time >= next_check_time:
+                    if dots_count > 0:  # If we printed dots, add a newline
+                        print()
+                        dots_count = 0
+                    print(f"[{get_timestamp()}] Resuming prompt detection...")
+                    next_check_time = None
+                    
                 # Check if the text is visible right now
                 text_visible = check_for_resume_text()
                 
-                if text_visible and not last_clicked:
+                if text_visible:
                     if dots_count > 0:  # If we printed dots, add a newline
                         print()
                         dots_count = 0
@@ -119,26 +126,17 @@ def main():
                     next_check_time = current_time + timedelta(seconds=POST_CLICK_WAIT_SECONDS)
                     print(f"[{get_timestamp()}] Waiting {POST_CLICK_WAIT_SECONDS} seconds before resuming checks...")
                     
-                    last_clicked = True
                     last_activity = datetime.now()  # Update last activity time
                     if start_time is None:  # Record first click time
                         start_time = datetime.now()
                     
-                elif not text_visible or (text_visible and current_time >= next_check_time):
-                    if last_clicked and current_time >= next_check_time:
-                        if dots_count > 0:  # If we printed dots, add a newline
-                            print()
-                            dots_count = 0
-                        print(f"[{get_timestamp()}] Resuming prompt detection...")
-                        last_clicked = False
-                        next_check_time = None
-                    elif not last_clicked:
-                        print(".", end="", flush=True)  # Show it's still running
-                        dots_count += 1
-                        if dots_count >= 50:  # Start a new line after 50 dots
-                            remaining_minutes = int((TIMEOUT_SECONDS - (current_time - last_activity).total_seconds()) / 60)
-                            print(f" [{get_timestamp()}] ({remaining_minutes}m until timeout)")
-                            dots_count = 0
+                else:
+                    print(".", end="", flush=True)  # Show it's still running
+                    dots_count += 1
+                    if dots_count >= 50:  # Start a new line after 50 dots
+                        remaining_minutes = int((TIMEOUT_SECONDS - (current_time - last_activity).total_seconds()) / 60)
+                        print(f" [{get_timestamp()}] ({remaining_minutes}m until timeout)")
+                        dots_count = 0
                     time.sleep(0.5)
                 
         except KeyboardInterrupt:
