@@ -13,6 +13,7 @@ TIMEOUT_MINUTES = 30
 TIMEOUT_SECONDS = TIMEOUT_MINUTES * 60
 POST_CLICK_WAIT_SECONDS = 60  # Wait 1 minute after clicking before resuming checks
 CHECK_INTERVAL = 0.5  # How often to check for the text (in seconds)
+HOURLY_RATE = 187.50  # Engineering hourly rate in USD
 
 def get_timestamp():
     """Return current timestamp in a readable format."""
@@ -30,6 +31,15 @@ def format_duration(seconds):
     else:
         return f"{seconds}s"
 
+def calculate_cost(seconds):
+    """Calculate cost savings based on hourly rate."""
+    hours = seconds / 3600.0
+    return hours * HOURLY_RATE
+
+def format_currency(amount):
+    """Format amount as USD currency."""
+    return f"${amount:,.2f}"
+
 def check_for_resume_text():
     """Check if 'resume the conversation' text is visible on screen."""
     try:
@@ -46,10 +56,12 @@ def check_for_resume_text():
         print(f"[{get_timestamp()}] Error checking screen: {e}")
         return False
 
-def print_summary(runtime, click_count):
+def print_summary(runtime_str, runtime_seconds, click_count):
     """Print a summary of the script's activity."""
-    print(f"[{get_timestamp()}] Total runtime: {runtime}")
+    cost_saved = calculate_cost(runtime_seconds)
+    print(f"[{get_timestamp()}] Total runtime: {runtime_str}")
     print(f"[{get_timestamp()}] Total clicks: {click_count}")
+    print(f"[{get_timestamp()}] Engineering time saved using FullAutoYolo: {format_currency(cost_saved)}")
 
 def main():
     print("\n=== Cursor Continue Clicker ===")
@@ -85,9 +97,10 @@ def main():
                 
                 # Check for timeout
                 if (current_time - last_activity).total_seconds() > TIMEOUT_SECONDS:
-                    runtime = format_duration((current_time - start_time).total_seconds()) if start_time else "0s"
+                    runtime_seconds = int((current_time - start_time).total_seconds()) if start_time else 0
+                    runtime_str = format_duration(runtime_seconds)
                     print(f"\n[{get_timestamp()}] No activity for {TIMEOUT_MINUTES} minutes. Stopping...")
-                    print_summary(runtime, click_count)
+                    print_summary(runtime_str, runtime_seconds, click_count)
                     return
                 
                 # If we're waiting after a click attempt, check if it's time to resume
@@ -146,9 +159,10 @@ def main():
                 time.sleep(CHECK_INTERVAL)
                 
         except KeyboardInterrupt:
-            runtime = format_duration((datetime.now() - start_time).total_seconds()) if start_time else "0s"
+            runtime_seconds = int((datetime.now() - start_time).total_seconds()) if start_time else 0
+            runtime_str = format_duration(runtime_seconds)
             print(f"\n[{get_timestamp()}] Stopping...")
-            print_summary(runtime, click_count)
+            print_summary(runtime_str, runtime_seconds, click_count)
         
 if __name__ == "__main__":
     main() 
