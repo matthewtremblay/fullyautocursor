@@ -73,7 +73,7 @@ def main():
     print(f"5. Wait {POST_CLICK_WAIT_SECONDS} seconds after each click attempt")
     print("\nTo stop: Press Ctrl+C or move mouse to any corner")
     
-    print("\nStep 1: Move your mouse over the 'resume the conversation' text")
+    print("\nStep 1: Move your mouse over the cursor continuation prompt")
     print("Step 2: Press Ctrl+C to capture the position")
     
     try:
